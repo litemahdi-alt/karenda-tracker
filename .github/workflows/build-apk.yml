@@ -32,8 +32,8 @@ jobs:
           unzip -q cmdline.zip -d cmdtmp
           cp -r cmdtmp/cmdline-tools/* $HOME/android-sdk/
           yes | $HOME/android-sdk/bin/sdkmanager --licenses --sdk_root=$HOME/android-sdk > /dev/null || true
-          $HOME/android-sdk/bin/sdkmanager --install "build-tools;36.1.0" "platform-tools" --sdk_root=$HOME/android-sdk
-          ls $HOME/android-sdk
+          $HOME/android-sdk/bin/sdkmanager --install "build-tools;36.1.0" "platform-tools" "platforms;android-36" --sdk_root=$HOME/android-sdk
+          ls $HOME/android-sdk $HOME/android-sdk/platforms
 
       - name: Configure Bubblewrap
         run: |

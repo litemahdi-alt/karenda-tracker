@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -22,18 +22,22 @@ jobs:
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      - name: Accept Android SDK licenses
+      - name: Install Android SDK (Bubblewrap layout)
         run: |
-          export ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
-          ls $ANDROID_SDK_ROOT
-          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null || true
+          mkdir -p $HOME/android-sdk
+          curl -sSL -o cmdline.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip -q cmdline.zip -d cmdtmp
+          cp -r cmdtmp/cmdline-tools/* $HOME/android-sdk/
+          yes | $HOME/android-sdk/bin/sdkmanager --licenses --sdk_root=$HOME/android-sdk > /dev/null || true
+          $HOME/android-sdk/bin/sdkmanager --install "build-tools;36.1.0" "platform-tools" --sdk_root=$HOME/android-sdk
+          ls $HOME/android-sdk
 
       - name: Configure Bubblewrap
         run: |
           mkdir -p ~/.bubblewrap
           python3 - <<'PY'
           import json, os
-          cfg = {"jdkPath": os.environ["JAVA_HOME"], "androidSdkPath": "/usr/local/lib/android/sdk"}
+          cfg = {"jdkPath": os.environ["JAVA_HOME"], "androidSdkPath": os.path.expanduser("~/android-sdk")}
           json.dump(cfg, open(os.path.expanduser("~/.bubblewrap/config.json"), "w"))
           PY
           cat ~/.bubblewrap/config.json

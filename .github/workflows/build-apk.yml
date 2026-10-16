@@ -18,11 +18,6 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - name: Check Android SDK
-        run: |
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          ls $ANDROID_HOME
-          yes | sdkmanager --licenses > /dev/null || true
 
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
@@ -30,51 +25,45 @@ jobs:
       - name: Configure Bubblewrap
         run: |
           mkdir -p ~/.bubblewrap
-          cat > ~/.bubblewrap/config.json <<EOF
-          {
-            "jdkPath": "$JAVA_HOME",
-"androidSdkPath": "/usr/local/lib/android/sdk"          }
-          EOF
+          echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"/usr/local/lib/android/sdk\"}" > ~/.bubblewrap/config.json
+          cat ~/.bubblewrap/config.json
 
       - name: Create signing key
-        run: |
-          keytool -genkeypair -v -keystore android.keystore -alias karenda \
-            -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass karenda123 -keypass karenda123 \
-            -dname "CN=Karenda, O=Karenda, C=MA"
+        run: keytool -genkeypair -v -keystore android.keystore -alias karenda -keyalg RSA -keysize 2048 -validity 10000 -storepass karenda123 -keypass karenda123 -dname "CN=Karenda, O=Karenda, C=MA"
 
       - name: Write TWA config
         run: |
           mkdir twa
-          cat > twa/twa-manifest.json <<EOF
-          {
+          python3 - <<'PY'
+          import json
+          h = "beautiful-cuchufli-e29f00.netlify.app"
+          cfg = {
             "packageId": "app.netlify.karenda.twa",
-            "host": "beautiful-cuchufli-e29f00.netlify.app",
+            "host": h,
             "name": "Karenda Tracker",
             "launcherName": "Karenda",
             "display": "standalone",
             "themeColor": "#0F2D27",
             "navigationColor": "#0F2D27",
             "backgroundColor": "#0F2D27",
-            "enableNotifications": false,
+            "enableNotifications": False,
             "startUrl": "/",
-            "iconUrl": "https://beautiful-cuchufli-e29f00.netlify.app/icons/icon-512.png",
-            "maskableIconUrl": "https://beautiful-cuchufli-e29f00.netlify.app/icons/icon-maskable-512.png",
-            "webManifestUrl": "https://beautiful-cuchufli-e29f00.netlify.app/manifest.json",
+            "iconUrl": "https://" + h + "/icons/icon-512.png",
+            "maskableIconUrl": "https://" + h + "/icons/icon-maskable-512.png",
+            "webManifestUrl": "https://" + h + "/manifest.json",
             "appVersion": "1",
             "appVersionCode": 1,
-            "signingKey": {
-              "path": "../android.keystore",
-              "alias": "karenda"
-            },
+            "signingKey": {"path": "../android.keystore", "alias": "karenda"},
             "orientation": "portrait",
             "fallbackType": "customtabs",
             "features": {},
-            "isChromeOSOnly": false,
-            "isMetaQuest": false,
+            "isChromeOSOnly": False,
+            "isMetaQuest": False,
             "minSdkVersion": 21
           }
-          EOF
+          json.dump(cfg, open("twa/twa-manifest.json", "w"), indent=2)
+          PY
+          cat twa/twa-manifest.json
 
       - name: Build APK
         env:
@@ -82,7 +71,6 @@ jobs:
           BUBBLEWRAP_KEY_PASSWORD: karenda123
         run: |
           cd twa
-          bubblewrap update --skipVersionUpgrade || true
           bubblewrap build --skipPwaValidation
 
       - uses: actions/upload-artifact@v4

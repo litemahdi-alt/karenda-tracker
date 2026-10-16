@@ -6,6 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -18,17 +19,68 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - uses: android-actions/setup-android@v3
+
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      - name: Init project
+      - name: Configure Bubblewrap
         run: |
-          mkdir twa && cd twa
-          printf '%s\n' "y" | bubblewrap init --manifest=https://beautiful-cuchufli-e29f00.netlify.app/manifest.json || true
+          mkdir -p ~/.bubblewrap
+          cat > ~/.bubblewrap/config.json <<EOF
+          {
+            "jdkPath": "$JAVA_HOME",
+            "androidSdkPath": "$ANDROID_HOME"
+          }
+          EOF
+
+      - name: Create signing key
+        run: |
+          keytool -genkeypair -v -keystore android.keystore -alias karenda \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass karenda123 -keypass karenda123 \
+            -dname "CN=Karenda, O=Karenda, C=MA"
+
+      - name: Write TWA config
+        run: |
+          mkdir twa
+          cat > twa/twa-manifest.json <<EOF
+          {
+            "packageId": "app.netlify.karenda.twa",
+            "host": "beautiful-cuchufli-e29f00.netlify.app",
+            "name": "Karenda Tracker",
+            "launcherName": "Karenda",
+            "display": "standalone",
+            "themeColor": "#0F2D27",
+            "navigationColor": "#0F2D27",
+            "backgroundColor": "#0F2D27",
+            "enableNotifications": false,
+            "startUrl": "/",
+            "iconUrl": "https://beautiful-cuchufli-e29f00.netlify.app/icons/icon-512.png",
+            "maskableIconUrl": "https://beautiful-cuchufli-e29f00.netlify.app/icons/icon-maskable-512.png",
+            "webManifestUrl": "https://beautiful-cuchufli-e29f00.netlify.app/manifest.json",
+            "appVersion": "1",
+            "appVersionCode": 1,
+            "signingKey": {
+              "path": "../android.keystore",
+              "alias": "karenda"
+            },
+            "orientation": "portrait",
+            "fallbackType": "customtabs",
+            "features": {},
+            "isChromeOSOnly": false,
+            "isMetaQuest": false,
+            "minSdkVersion": 21
+          }
+          EOF
 
       - name: Build APK
+        env:
+          BUBBLEWRAP_KEYSTORE_PASSWORD: karenda123
+          BUBBLEWRAP_KEY_PASSWORD: karenda123
         run: |
           cd twa
+          bubblewrap update --skipVersionUpgrade || true
           bubblewrap build --skipPwaValidation
 
       - uses: actions/upload-artifact@v4

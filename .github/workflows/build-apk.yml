@@ -64,7 +64,7 @@ jobs:
             "startUrl": "/",
             "iconUrl": "https://" + h + "/icons/icon-512.png",
             "maskableIconUrl": "https://" + h + "/icons/icon-maskable-512.png",
-            "webManifestUrl": "https://" + h + "/manifest.json",
+            "webManifestUrl": "https://" + h + "/manifest.webmanifest",
             "appVersion": "1",
             "appVersionCode": 1,
             "signingKey": {"path": "../android.keystore", "alias": "karenda"},

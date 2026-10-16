@@ -1,0 +1,25 @@
+KARENDA TRACKER - mise en ligne (gratuite, environ 5 minutes)
+
+Contenu du dossier : index.html, manifest.json, sw.js et le dossier icons.
+Gardez-les tous ensemble, au même niveau.
+
+OPTION A - Netlify Drop (la plus simple, sans compte GitHub)
+1. Dézippez le dossier sur votre ordinateur.
+2. Allez sur app.netlify.com/drop et glissez le dossier entier dans la page.
+3. Netlify vous donne un lien en https (vous pouvez le renommer dans les réglages du site).
+
+OPTION B - Cloudflare Pages ou GitHub Pages
+Créez un projet, déposez ces fichiers à la racine, activez la publication. Le lien obtenu est en https.
+
+INSTALLER SUR LE TÉLÉPHONE
+- Android (Chrome) : ouvrez le lien, puis bouton "Installer l'app" dans la page,
+  ou menu ⋮ > "Installer l'application".
+- iPhone (Safari obligatoire) : ouvrez le lien, bouton Partager > "Sur l'écran d'accueil".
+
+Après l'installation, l'application a son icône Karenda, s'ouvre en plein écran
+et fonctionne sans connexion. Les données restent sur le téléphone de chaque personne.
+
+MISE À JOUR
+Remplacez les fichiers sur l'hébergement. Les utilisateurs reçoivent la nouvelle version
+à leur prochaine ouverture avec connexion. Si vous changez les icônes ou sw.js,
+changez aussi le numéro de version sur la première ligne de sw.js (karenda-tracker-v3...).

@@ -18,8 +18,11 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-
-      - uses: android-actions/setup-android@v3
+      - name: Check Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls $ANDROID_HOME
+          yes | sdkmanager --licenses > /dev/null || true
 
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
@@ -30,8 +33,7 @@ jobs:
           cat > ~/.bubblewrap/config.json <<EOF
           {
             "jdkPath": "$JAVA_HOME",
-            "androidSdkPath": "$ANDROID_HOME"
-          }
+"androidSdkPath": "/usr/local/lib/android/sdk"          }
           EOF
 
       - name: Create signing key

@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
 
@@ -22,10 +22,20 @@ jobs:
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
+      - name: Accept Android SDK licenses
+        run: |
+          export ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
+          ls $ANDROID_SDK_ROOT
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null || true
+
       - name: Configure Bubblewrap
         run: |
           mkdir -p ~/.bubblewrap
-          echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"/usr/local/lib/android/sdk\"}" > ~/.bubblewrap/config.json
+          python3 - <<'PY'
+          import json, os
+          cfg = {"jdkPath": os.environ["JAVA_HOME"], "androidSdkPath": "/usr/local/lib/android/sdk"}
+          json.dump(cfg, open(os.path.expanduser("~/.bubblewrap/config.json"), "w"))
+          PY
           cat ~/.bubblewrap/config.json
 
       - name: Create signing key
@@ -44,7 +54,11 @@ jobs:
             "launcherName": "Karenda",
             "display": "standalone",
             "themeColor": "#0F2D27",
+            "themeColorDark": "#0F2D27",
             "navigationColor": "#0F2D27",
+            "navigationColorDark": "#0F2D27",
+            "navigationDividerColor": "#0F2D27",
+            "navigationDividerColorDark": "#0F2D27",
             "backgroundColor": "#0F2D27",
             "enableNotifications": False,
             "startUrl": "/",
@@ -57,21 +71,29 @@ jobs:
             "orientation": "portrait",
             "fallbackType": "customtabs",
             "features": {},
+            "splashScreenFadeOutDuration": 300,
+            "enableSiteSettingsShortcut": True,
             "isChromeOSOnly": False,
             "isMetaQuest": False,
-            "minSdkVersion": 21
+            "fullScopeUrl": "https://" + h + "/",
+            "minSdkVersion": 21,
+            "shortcuts": [],
+            "generatorApp": "bubblewrap-cli"
           }
           json.dump(cfg, open("twa/twa-manifest.json", "w"), indent=2)
           PY
           cat twa/twa-manifest.json
 
+      - name: Generate Android project
+        working-directory: twa
+        run: bubblewrap update --skipVersionUpgrade
+
       - name: Build APK
+        working-directory: twa
         env:
           BUBBLEWRAP_KEYSTORE_PASSWORD: karenda123
           BUBBLEWRAP_KEY_PASSWORD: karenda123
-        run: |
-          cd twa
-          bubblewrap build --skipPwaValidation
+        run: bubblewrap build --skipPwaValidation
 
       - uses: actions/upload-artifact@v4
         with:

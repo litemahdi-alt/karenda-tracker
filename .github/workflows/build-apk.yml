@@ -32,7 +32,7 @@ jobs:
           unzip -q cmdline.zip -d cmdtmp
           cp -r cmdtmp/cmdline-tools/* $HOME/android-sdk/
           yes | $HOME/android-sdk/bin/sdkmanager --licenses --sdk_root=$HOME/android-sdk > /dev/null || true
-          $HOME/android-sdk/bin/sdkmanager --install "build-tools;36.1.0" "build-tools;35.0.0" "platform-tools" "platforms;android-35" --sdk_root=$HOME/android-sdk > /dev/null
+          $HOME/android-sdk/bin/sdkmanager --install "build-tools;36.1.0" "build-tools;35.0.0" "platform-tools" "platforms;android-36" "platforms;android-35" --sdk_root=$HOME/android-sdk > /dev/null
           ls $HOME/android-sdk $HOME/android-sdk/platforms
 
       - name: Configure Bubblewrap
@@ -95,13 +95,13 @@ jobs:
         working-directory: twa
         run: bubblewrap update --skipVersionUpgrade
 
-      - name: Patch project (API 35 and pinned androidx versions)
+      - name: Upgrade Android Gradle Plugin to 8.10.1
         working-directory: twa
         run: |
-          sed -i 's/compileSdkVersion 36/compileSdkVersion 35/; s/targetSdkVersion 36/targetSdkVersion 35/' app/build.gradle
-          printf '\nconfigurations.all {\n    resolutionStrategy {\n        force "androidx.browser:browser:1.8.0", "androidx.core:core:1.15.0", "androidx.core:core-ktx:1.15.0"\n    }\n}\n' >> app/build.gradle
+          sed -i 's/com.android.tools.build:gradle:8.9.1/com.android.tools.build:gradle:8.10.1/' build.gradle
+          grep -n "com.android.tools.build" build.gradle
           grep -n "SdkVersion" app/build.gradle
-          tail -8 app/build.gradle
+          cat gradle/wrapper/gradle-wrapper.properties | grep distributionUrl
 
       - name: Build APK
         working-directory: twa
@@ -110,7 +110,10 @@ jobs:
           BUBBLEWRAP_KEY_PASSWORD: karenda123
         run: bubblewrap build --skipPwaValidation
 
+      - name: List outputs
+        run: ls -la twa/*.apk
+
       - uses: actions/upload-artifact@v4
         with:
           name: karenda-apk
-          path: twa/*.apk
+          path: twa/app-release-signed.apk

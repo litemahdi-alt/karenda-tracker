@@ -83,7 +83,7 @@ jobs:
             "isChromeOSOnly": False,
             "isMetaQuest": False,
             "fullScopeUrl": "https://" + h + "/",
-            "minSdkVersion": 21,
+            "minSdkVersion": 24,
             "shortcuts": [],
             "generatorApp": "bubblewrap-cli"
           }

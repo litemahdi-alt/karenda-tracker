@@ -32,8 +32,10 @@ jobs:
           unzip -q cmdline.zip -d cmdtmp
           cp -r cmdtmp/cmdline-tools/* $HOME/android-sdk/
           yes | $HOME/android-sdk/bin/sdkmanager --licenses --sdk_root=$HOME/android-sdk > /dev/null || true
-          $HOME/android-sdk/bin/sdkmanager --install "build-tools;36.1.0" "platform-tools" "platforms;android-36" --sdk_root=$HOME/android-sdk
-          ls $HOME/android-sdk $HOME/android-sdk/platforms
+          $HOME/android-sdk/bin/sdkmanager --install "build-tools;36.1.0" "build-tools;35.0.0" "platform-tools" "platforms;android-35" --sdk_root=$HOME/android-sdk > /dev/null
+          echo "=== SDK content ==="
+          ls $HOME/android-sdk $HOME/android-sdk/platforms $HOME/android-sdk/licenses
+          ls $HOME/android-sdk/platforms/android-35 | head -20
 
       - name: Configure Bubblewrap
         run: |
@@ -94,6 +96,12 @@ jobs:
       - name: Generate Android project
         working-directory: twa
         run: bubblewrap update --skipVersionUpgrade
+
+      - name: Patch project to API 35
+        working-directory: twa
+        run: |
+          sed -i 's/compileSdkVersion 36/compileSdkVersion 35/; s/targetSdkVersion 36/targetSdkVersion 35/' app/build.gradle
+          grep -n "SdkVersion" app/build.gradle
 
       - name: Build APK
         working-directory: twa
